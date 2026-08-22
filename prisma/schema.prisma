@@ -1,0 +1,86 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  credits   Int      @default(100)
+  createdAt DateTime @default(now())
+
+  apiKeys      ApiKey[]
+  documents    Document[]
+  transactions CreditTransaction[]
+  brandKits    BrandKit[]
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key        String    @unique
+  prefix     String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  // null = active. A future timestamp = scheduled revoke (grace window after
+  // a rotation). A past timestamp = revoked. requireApiKey enforces this.
+  revokedAt  DateTime?
+
+  @@index([userId])
+  @@index([revokedAt])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String   @default("pending")
+  title     String?
+  pages     Int?
+  bytes     Int?
+  errorMsg  String?
+  createdAt DateTime @default(now())
+
+  transactions CreditTransaction[]
+
+  @@index([userId, createdAt])
+}
+
+model CreditTransaction {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  amount     Int
+  reason     String
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model BrandKit {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String   @default("default")
+  logoUrl      String?
+  primaryColor String?
+  accentColor  String?
+  fontStyle    String?  // 'serif' | 'sans' | 'mono' (coarse fallback)
+  fontFamily   String?  // full CSS font-family stack (e.g. '"Eurostile", Arial, sans-serif')
+  headingFontFamily String?  // optional separate heading stack
+  density      String?  // 'compact' | 'normal' | 'spacious'
+  baseTheme    String?  // overrides theme if set: 'clean' | 'executive' | ...
+  customCss    String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, name])
+}

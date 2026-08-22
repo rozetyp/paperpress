@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About - paperpress</title>
+<meta name="description" content="paperpress is a small, focused PDF API for AI agents. About the project, who builds it, where it's headed.">
+<meta name="theme-color" content="#1c1814">
+<link rel="canonical" href="https://paperpress-production.up.railway.app/about.html">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="paperpress">
+<meta property="og:title" content="About - paperpress">
+<meta property="og:description" content="paperpress is a small, focused PDF API for AI agents. About the project, who builds it, where it's headed.">
+<meta property="og:url" content="https://paperpress-production.up.railway.app/about.html">
+<meta property="og:image" content="https://paperpress-production.up.railway.app/og-image.png">
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="/" aria-label="paperpress home">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="8" y1="13" x2="14" y2="13"/>
+      <line x1="8" y1="17" x2="14" y2="17"/>
+    </svg>
+    <span>paperpress</span>
+  </a>
+  <nav class="nav-links">
+    <a href="/#how">How it works</a>
+    <a href="/#themes">Themes</a>
+    <a href="/#install">Install</a>
+    <a href="/#pricing">Pricing</a>
+    <a href="/docs/">Docs</a>
+    <a href="/about.html">About</a>
+  </nav>
+</header>
+
+<main class="doc">
+  <article>
+    <h1>About paperpress</h1>
+
+    <p class="lede-doc">paperpress is a small, focused tool: a PDF API designed for AI agents and LLM apps.</p>
+
+    <h2>Why this exists</h2>
+
+    <p>AI agents produce markdown by default. Everywhere else, PDF export is bad - too generic, too template-heavy, or too tied to a single client. The result: agents that can write reports but can't deliver them as something you'd actually share with a customer.</p>
+
+    <p>paperpress turns that markdown into a real document with proper typography, page breaks, headers, and your brand applied - all accessible through the MCP server your agent runtime already loads. One tool call, one PDF.</p>
+
+    <h2>How it's built</h2>
+
+    <p>The whole product is one process: a Fastify API rendering markdown through Playwright. No worker queue, no Redis, no microservices. PDFs live on disk; rate limiting is in memory. Infrastructure scales when traffic demands it, not before.</p>
+
+    <p>That choice is deliberate. Most of the code is rendering quality - theme CSS, page-break rules, brand-kit detection, header layouts. The bet is that craft in <em>that</em> work matters more than infra hygiene at this stage.</p>
+
+    <h2>Who builds it</h2>
+
+    <p>An independent team. Small, focused, shipping fast. The roadmap is at the bottom of the homepage and on this page, not on a slide deck.</p>
+
+    <h2>Where we're going</h2>
+
+    <ul>
+      <li><strong>Next:</strong> Stripe wiring for credit-pack billing, npm-publishing <code>@paperpress/mcp</code>, custom domain.</li>
+      <li><strong>Soon:</strong> Cover pages and front matter, inline charts (Vega-Lite → SVG → PDF), KaTeX math.</li>
+      <li><strong>Later:</strong> Webhooks for async jobs, dashboard UI, a public status page.</li>
+    </ul>
+
+    <p>The free tier stays free: 100 credits on signup, no card required.</p>
+
+    <h2>How to reach us</h2>
+
+    <p><a href="mailto:hello@paperpress.dev">hello@paperpress.dev</a> - for product questions, billing, partnerships, or feedback. We read every message.</p>
+  </article>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <a class="brand" href="/">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="8" y1="13" x2="14" y2="13"/>
+        <line x1="8" y1="17" x2="14" y2="17"/>
+      </svg>
+      <span>paperpress</span>
+    </a>
+    <nav class="footer-nav">
+      <a href="/about.html">About</a>
+      <a href="/docs/">Docs</a>
+      <a href="/docs/#mcp-server">Install MCP</a>
+      <a href="/docs/#api-reference">API</a>
+      <a href="mailto:hello@paperpress.dev">Contact</a>
+    </nav>
+  </div>
+  <p class="footer-fineprint">© paperpress · A PDF API for AI agents.</p>
+</footer>
+
+</body>
+</html>
