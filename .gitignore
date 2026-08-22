@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.env
+.env.local
+.DS_Store
+storage/
+*.log
+.playwright/
+landing/docs/
+Screenshot*.png
+
+# Generated at Docker build time (scripts/build-og.ts, scripts/build-icons.ts)
+# from landing/favicon.svg — kept out of git so they can't drift from source.
+landing/og-image.png
+landing/favicon.ico
+landing/favicon-32.png
+landing/apple-touch-icon.png
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Coverage output
+coverage/
+.nyc_output/

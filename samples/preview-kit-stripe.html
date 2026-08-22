@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Q2 2026 SEO Audit</title>
+<style>
+@page {
+  margin: var(--pp-page-margin, 18mm 16mm 18mm 16mm);
+}
+
+:root {
+  /* colors */
+  --pp-text: #1a1a1a;
+  --pp-muted: #6b7280;
+  --pp-rule: #e5e7eb;
+  --pp-accent: #0a2540;
+  --pp-accent-soft: rgba(10, 37, 64, 0.06);
+  --pp-code-bg: #f6f8fa;
+  --pp-code-fg: #1f2937;
+  --pp-th-bg: #f9fafb;
+
+  /* fonts */
+  --pp-font-body: 'Source Serif Pro', Georgia, 'Times New Roman', serif;
+  --pp-font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --pp-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* type scale */
+  --pp-size-body: 11pt;
+  --pp-line-height: 1.55;
+  --pp-h1-size: 1.9em;
+  --pp-h2-size: 1.45em;
+  --pp-h3-size: 1.2em;
+  --pp-h4-size: 1.05em;
+
+  /* spacing scale (themes can compress or expand) */
+  --pp-spacing-scale: 1;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  color: var(--pp-text);
+  font-family: var(--pp-font-body);
+  font-size: var(--pp-size-body);
+  line-height: var(--pp-line-height);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--pp-font-heading);
+  color: var(--pp-accent);
+  line-height: 1.25;
+  margin: calc(1.4em * var(--pp-spacing-scale)) 0 0.5em;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+h1 { font-size: var(--pp-h1-size); margin-top: 0; letter-spacing: -0.01em; }
+h2 { font-size: var(--pp-h2-size); }
+h3 { font-size: var(--pp-h3-size); }
+h4 { font-size: var(--pp-h4-size); }
+
+p {
+  margin: 0 0 calc(0.85em * var(--pp-spacing-scale));
+  orphans: 3;
+  widows: 3;
+}
+
+a { color: var(--pp-accent); text-decoration: underline; }
+strong { font-weight: 600; }
+
+ul, ol { margin: 0 0 1em 1.4em; padding: 0; }
+li { margin-bottom: 0.3em; }
+li > p { margin-bottom: 0.3em; }
+
+blockquote {
+  margin: 1em 0;
+  padding: 0.4em 1em;
+  border-left: 3px solid var(--pp-accent);
+  background: var(--pp-accent-soft);
+  color: var(--pp-muted);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--pp-rule);
+  margin: 1.6em 0;
+}
+
+code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.9em;
+  background: var(--pp-code-bg);
+  color: var(--pp-code-fg);
+  padding: 0.12em 0.35em;
+  border-radius: 3px;
+}
+
+pre {
+  background: var(--pp-code-bg);
+  color: var(--pp-code-fg);
+  padding: 0.9em 1em;
+  border-radius: 4px;
+  overflow-x: auto;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  font-size: 0.9em;
+}
+pre code { background: transparent; padding: 0; color: inherit; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.95em;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+thead { display: table-header-group; }
+th, td {
+  border-bottom: 1px solid var(--pp-rule);
+  text-align: left;
+  padding: 0.5em 0.7em;
+  vertical-align: top;
+}
+th {
+  background: var(--pp-th-bg);
+  font-weight: 600;
+  color: var(--pp-accent);
+}
+tr { page-break-inside: avoid; break-inside: avoid; }
+
+img, figure, svg, canvas {
+  max-width: 100%;
+  height: auto;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+figure { margin: 1em 0; }
+figure figcaption {
+  font-size: 0.85em;
+  color: var(--pp-muted);
+  text-align: center;
+  margin-top: 0.3em;
+}
+
+/* heading anchors auto-injected by rehype-autolink-headings */
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* footnotes */
+sup a { text-decoration: none; }
+.footnotes {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid var(--pp-rule);
+  font-size: 0.85em;
+  color: var(--pp-muted);
+}
+
+
+/* brand kit overrides */
+:root {
+  --pp-accent: #635bff;
+  --pp-accent-soft: rgba(99, 91, 255, 0.08);
+  --pp-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --pp-font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --pp-spacing-scale: 1;
+}</style>
+</head>
+<body>
+<h1 id="q2-2026-seo-audit"><a href="#q2-2026-seo-audit">Q2 2026 SEO Audit</a></h1>
+<p><strong>Site:</strong> example.com
+<strong>Prepared for:</strong> Acme Corp
+<strong>Date:</strong> May 14, 2026</p>
+<h2 id="executive-summary"><a href="#executive-summary">Executive Summary</a></h2>
+<p>Overall technical SEO score: <strong>72/100</strong> — up 6 points from Q1 2026. Three issues block further ranking improvements, with recommended fixes detailed below. We estimate <strong>+12–18% organic traffic</strong> within 60 days if all high-priority items are addressed.</p>
+<h2 id="key-findings"><a href="#key-findings">Key Findings</a></h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Pages affected</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Missing meta descriptions</td>
+<td>47</td>
+<td><strong>High</strong></td>
+</tr>
+<tr>
+<td>Slow Largest Contentful Paint (>2.5s)</td>
+<td>12</td>
+<td><strong>High</strong></td>
+</tr>
+<tr>
+<td>Broken internal links</td>
+<td>8</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Missing image <code>alt</code> attributes</td>
+<td>134</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Duplicate title tags</td>
+<td>4</td>
+<td>Low</td>
+</tr>
+</tbody>
+</table>
+<h2 id="top-pages-by-organic-traffic"><a href="#top-pages-by-organic-traffic">Top Pages by Organic Traffic</a></h2>
+<ol>
+<li><code>/blog/getting-started</code> — 18,420 visits this quarter</li>
+<li><code>/pricing</code> — 14,201 visits</li>
+<li><code>/features/integrations</code> — 9,887 visits</li>
+<li><code>/blog/changelog-2026</code> — 7,540 visits</li>
+<li><code>/about</code> — 4,112 visits</li>
+</ol>
+<h2 id="recommendations"><a href="#recommendations">Recommendations</a></h2>
+<h3 id="1-fix-meta-descriptions"><a href="#1-fix-meta-descriptions">1. Fix meta descriptions</a></h3>
+<p>Add unique 150–160 character meta descriptions to all 47 affected pages. Auto-generate from the <code>&#x3C;h1></code> plus the first paragraph as a baseline, then manually polish the top-traffic pages.</p>
+<blockquote>
+<p>Estimated impact: <strong>+8% CTR</strong> on existing rankings within 30 days. This is the highest-leverage change on the list.</p>
+</blockquote>
+<h3 id="2-improve-largest-contentful-paint"><a href="#2-improve-largest-contentful-paint">2. Improve Largest Contentful Paint</a></h3>
+<p>Run a Lighthouse audit on each slow page:</p>
+<pre><code class="language-bash">npx lighthouse https://example.com/blog/getting-started \
+  --only-categories=performance \
+  --output=json
+</code></pre>
+<p>Common culprits in your case:</p>
+<ul>
+<li>Unoptimized hero images (3 pages)</li>
+<li>Render-blocking third-party scripts (5 pages)</li>
+<li>No <code>font-display: swap</code> on custom fonts (all 12)</li>
+</ul>
+<h3 id="3-repair-broken-internal-links"><a href="#3-repair-broken-internal-links">3. Repair broken internal links</a></h3>
+<p>The eight broken links are listed in the appendix. All of them point to deleted pages from the March 2026 migration. Replace them with their post-migration equivalents — the redirect map is already documented internally.</p>
+<h2 id="appendix-technical-detail"><a href="#appendix-technical-detail">Appendix: technical detail</a></h2>
+<p>Full crawl data, the broken-link list, and per-page scorecards are available on request. We re-crawl monthly and will surface regressions in the next quarterly report.</p>
+<hr>
+<p><em>Report generated by your SEO agent · rendered with <a href="https://paperpress.dev">paperpress</a>.</em></p>
+</body>
+</html>

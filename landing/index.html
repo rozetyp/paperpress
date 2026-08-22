@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>paperpress - Markdown to branded PDFs for AI agents</title>
+<meta name="description" content="Detect any company's brand from a URL, then render markdown into PDFs in that brand. Built for AI agents, sales tools, white-label SaaS. 100 free credits on signup.">
+<meta name="theme-color" content="#1c1814">
+<link rel="canonical" href="https://paperpress-production.up.railway.app/">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="paperpress">
+<meta property="og:title" content="paperpress - Documents in any company's brand">
+<meta property="og:description" content="Detect any company's brand from a URL, then render markdown into PDFs in that brand. Built for AI agents, sales tools, white-label SaaS.">
+<meta property="og:url" content="https://paperpress-production.up.railway.app/">
+<meta property="og:image" content="https://paperpress-production.up.railway.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="paperpress - Markdown in. Their brand out.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="paperpress - Documents in any company's brand">
+<meta name="twitter:description" content="Detect any company's brand from a URL, then render markdown into PDFs in that brand. Built for AI agents, sales tools, white-label SaaS.">
+<meta name="twitter:image" content="https://paperpress-production.up.railway.app/og-image.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "paperpress",
+  "description": "Brand-aware document API for AI agents. Detect any company's brand from a URL, then render markdown into PDFs in that brand. MCP server for Claude Desktop, Cursor, Cline.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "url": "https://paperpress-production.up.railway.app/",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free tier: 100 credits, 1 credit per rendered page"
+  },
+  "softwareHelp": "https://paperpress-production.up.railway.app/docs/"
+}
+</script>
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="/" aria-label="paperpress home">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="8" y1="13" x2="14" y2="13"/>
+      <line x1="8" y1="17" x2="14" y2="17"/>
+    </svg>
+    <span>paperpress</span>
+  </a>
+  <nav class="nav-links">
+    <a href="#try">Try it</a>
+    <a href="#use-cases">Use cases</a>
+    <a href="#how">How it works</a>
+    <a href="#themes">Themes</a>
+    <a href="#install">Install</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/docs/">Docs</a>
+    <a href="/about.html">About</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div>
+      <span class="eyebrow">Brand-aware document API for AI agents</span>
+      <h1>Markdown in.<br><span class="accent">Their brand out.</span></h1>
+      <p class="lede">Detect any company's brand from a URL - colors, logo, typeface - then render markdown into PDFs in that brand. Built for sales agents, white-label SaaS, and anyone whose AI produces docs for someone else's identity.</p>
+      <form id="getkey" class="signup" novalidate>
+        <input type="email" name="email" placeholder="you@company.com" required autocomplete="email" aria-label="Email for your API key">
+        <button type="submit" class="btn primary">Get a key</button>
+      </form>
+      <p id="getkey-msg" class="signup-msg" hidden></p>
+      <p class="signup-note">100 free credits, no card. <a href="/docs/#mcp-server">Install the MCP server</a> · <a href="/docs/#api-reference">API docs</a></p>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+      <div class="paper paper-back"></div>
+      <div class="paper paper-front">
+        <div class="paper-header">
+          <div class="paper-logo"></div>
+          <div class="paper-title">Q4 Review</div>
+        </div>
+        <div class="paper-body">
+          <div class="bar h1"></div>
+          <div class="bar p"></div>
+          <div class="bar p"></div>
+          <div class="bar p short"></div>
+          <div class="bar h2"></div>
+          <div class="bar p"></div>
+          <div class="bar p"></div>
+          <div class="paper-table">
+            <div class="row head"><span></span><span></span><span></span></div>
+            <div class="row"><span></span><span></span><span></span></div>
+            <div class="row"><span></span><span></span><span></span></div>
+            <div class="row"><span></span><span></span><span></span></div>
+          </div>
+          <div class="bar h2"></div>
+          <div class="bar p"></div>
+          <div class="bar p short"></div>
+        </div>
+        <div class="paper-footer">
+          <span>paperpress</span>
+          <span>1 / 3</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="try" class="block">
+    <div class="block-head">
+      <h2>Try it now</h2>
+      <p>Paste a company URL. We detect the brand and render a sample document in it. No signup, no card.</p>
+    </div>
+    <form id="try-form" class="try-form" novalidate>
+      <input type="url" name="url" placeholder="https://halliburton.com" required autocomplete="off">
+      <button type="submit" class="btn primary">Try it →</button>
+    </form>
+    <p id="try-msg" class="try-msg" hidden></p>
+    <div id="try-result" class="try-result" hidden>
+      <div class="try-kit">
+        <div class="try-kit-row">
+          <span class="try-kit-label">Color</span>
+          <span class="try-kit-swatch" data-swatch></span>
+          <span class="try-kit-value" data-color></span>
+        </div>
+        <div class="try-kit-row">
+          <span class="try-kit-label">Logo</span>
+          <img class="try-kit-logo" data-logo alt="" hidden>
+          <span class="try-kit-value try-kit-empty" data-logo-empty hidden>(none detected)</span>
+        </div>
+        <div class="try-kit-row">
+          <span class="try-kit-label">Font</span>
+          <span class="try-kit-value try-kit-mono" data-font></span>
+        </div>
+        <p class="try-elapsed"><span data-elapsed></span></p>
+      </div>
+      <div class="try-output">
+        <p class="try-actions">
+          <a class="btn try-pdf-link" data-pdf-link target="_blank" rel="noopener">Open the rendered PDF →</a>
+        </p>
+        <p class="try-final-cta">
+          Render your own markdown in your own brand?
+          <a href="#install">Install the MCP</a> · <a href="#api">Hit the API</a> · <a href="/docs/">Read the docs</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="use-cases" class="block">
+    <div class="block-head">
+      <h2>When you'd use this</h2>
+      <p>Anywhere your AI produces a document for someone whose brand isn't yours.</p>
+    </div>
+    <div class="use-grid">
+      <div class="use-card">
+        <h3>Sales &amp; ABM outreach</h3>
+        <p>An SDR agent drafts a 1-pager for a prospect. paperpress auto-detects the prospect's brand from their domain and renders the doc in their colors, logo, and typeface. Reply rates on personalized B2B outreach are 2-5x generic templates.</p>
+      </div>
+      <div class="use-card">
+        <h3>White-label SaaS exports</h3>
+        <p>Your platform produces invoices, reports, contracts. Each customer wants them to look like <em>their</em> docs, not yours. Pass a saved brand kit per customer and every export carries their identity.</p>
+      </div>
+      <div class="use-card">
+        <h3>Agencies and freelancers</h3>
+        <p>One practitioner, twenty clients, twenty different brands. Save one kit per client. Switch by name on each render. No manual CSS theming, no mismatched colors.</p>
+      </div>
+      <div class="use-card">
+        <h3>Customer success deliverables</h3>
+        <p>A CSM generates a Quarterly Business Review for each top customer. Each QBR carries the customer's brand - feels like a custom deliverable, not a templated check-in.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="block">
+    <div class="block-head">
+      <h2>How it works</h2>
+      <p>One call. The agent doesn't need an SDK; you don't need a UI.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">01</div>
+        <h3>Your agent writes markdown</h3>
+        <p>Claude, GPT, Gemini - they all speak markdown natively, no prompt tuning needed.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">02</div>
+        <h3>Pass a URL or a saved kit</h3>
+        <p>We detect colors, logo, and typeface from the live site - or use a kit you saved earlier. One field on the render call, no separate setup.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">03</div>
+        <h3>You get a signed URL</h3>
+        <p>Paginated, brand-applied PDF. Open it, share it, attach it. HMAC-signed, time-limited share URL.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="themes" class="block">
+    <div class="block-head">
+      <h2>Five themes, same markdown</h2>
+      <p>One <code>sample.md</code> in, five PDFs out. Each thumbnail is a real paperpress render - click to open the PDF.</p>
+    </div>
+    <div class="gallery">
+      <a class="gallery-card" href="/gallery/preview-clean.pdf?v=1" target="_blank" rel="noopener">
+        <span class="gallery-thumb"><img src="/gallery/preview-clean.png?v=1" alt="Clean theme - Q2 SEO Audit PDF" loading="lazy" width="595" height="842"></span>
+        <span class="gallery-meta"><strong>clean</strong><span class="sub">general reports</span></span>
+      </a>
+      <a class="gallery-card" href="/gallery/preview-executive.pdf?v=1" target="_blank" rel="noopener">
+        <span class="gallery-thumb"><img src="/gallery/preview-executive.png?v=1" alt="Executive theme - Q2 SEO Audit PDF" loading="lazy" width="595" height="842"></span>
+        <span class="gallery-meta"><strong>executive</strong><span class="sub">board decks</span></span>
+      </a>
+      <a class="gallery-card" href="/gallery/preview-academic.pdf?v=1" target="_blank" rel="noopener">
+        <span class="gallery-thumb"><img src="/gallery/preview-academic.png?v=1" alt="Academic theme - Q2 SEO Audit PDF" loading="lazy" width="595" height="842"></span>
+        <span class="gallery-meta"><strong>academic</strong><span class="sub">papers</span></span>
+      </a>
+      <a class="gallery-card" href="/gallery/preview-technical.pdf?v=1" target="_blank" rel="noopener">
+        <span class="gallery-thumb"><img src="/gallery/preview-technical.png?v=1" alt="Technical theme - Q2 SEO Audit PDF" loading="lazy" width="595" height="842"></span>
+        <span class="gallery-meta"><strong>technical</strong><span class="sub">API docs</span></span>
+      </a>
+      <a class="gallery-card" href="/gallery/preview-marketing.pdf?v=1" target="_blank" rel="noopener">
+        <span class="gallery-thumb"><img src="/gallery/preview-marketing.png?v=1" alt="Marketing theme - Q2 SEO Audit PDF" loading="lazy" width="595" height="842"></span>
+        <span class="gallery-meta"><strong>marketing</strong><span class="sub">pitch decks</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="brand-kits" class="block">
+    <div class="block-head">
+      <h2>Brand kits, auto-detected from a URL</h2>
+      <p>Pass <code>https://stripe.com</code> to <code>POST /v1/brand-kits/detect</code>. Get back primary color, font style, and logo - straight from the live site. These four PDFs were rendered with the detected kits, untouched.</p>
+    </div>
+    <div class="gallery">
+      <a class="gallery-card" href="/gallery/detect-stripe-com.pdf?v=1" target="_blank" rel="noopener">
+        <span class="gallery-thumb"><img src="/gallery/detect-stripe-com.png?v=1" alt="Detected from stripe.com" loading="lazy" width="595" height="842"></span>
+        <span class="gallery-meta"><span class="swatch" style="background:#533afd"></span><strong>stripe.com</strong><span class="sub">#533afd</span></span>
+      </a>
+      <a class="gallery-card" href="/gallery/detect-github-com.pdf?v=1" target="_blank" rel="noopener">
+        <span class="gallery-thumb"><img src="/gallery/detect-github-com.png?v=1" alt="Detected from github.com" loading="lazy" width="595" height="842"></span>
+        <span class="gallery-meta"><span class="swatch" style="background:#1f883d"></span><strong>github.com</strong><span class="sub">#1f883d</span></span>
+      </a>
+      <a class="gallery-card" href="/gallery/detect-vercel-com.pdf?v=1" target="_blank" rel="noopener">
+        <span class="gallery-thumb"><img src="/gallery/detect-vercel-com.png?v=1" alt="Detected from vercel.com" loading="lazy" width="595" height="842"></span>
+        <span class="gallery-meta"><span class="swatch" style="background:#000"></span><strong>vercel.com</strong><span class="sub">mono</span></span>
+      </a>
+      <a class="gallery-card" href="/gallery/detect-railway-com.pdf?v=1" target="_blank" rel="noopener">
+        <span class="gallery-thumb"><img src="/gallery/detect-railway-com.png?v=1" alt="Detected from railway.com" loading="lazy" width="595" height="842"></span>
+        <span class="gallery-meta"><span class="swatch" style="background:#c750f1"></span><strong>railway.com</strong><span class="sub">#c750f1</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section id="install" class="block">
+    <div class="block-head">
+      <h2>Install in your agent</h2>
+      <p>Drop one block into your MCP config. Your agent gets a <code>generate_pdf</code> tool.</p>
+    </div>
+<pre class="code"><code>{
+  "mcpServers": {
+    "paperpress": {
+      "command": "npx",
+      "args": ["-y", "@paperpress/mcp"],
+      "env": { "PAPERPRESS_API_KEY": "pp_live_..." }
+    }
+  }
+}</code></pre>
+    <p style="font-size:13.5px;color:var(--muted);margin-top:8px">Works with Claude Desktop, Cursor, Cline, Continue, and any MCP-compatible client. <a href="/docs/#mcp-server">Full install guide →</a></p>
+  </section>
+
+  <section id="api" class="block">
+    <div class="block-head">
+      <h2>Or call the REST API</h2>
+      <p>One POST detects the brand <em>and</em> renders. Bearer auth, signed URL response.</p>
+    </div>
+<pre class="code"><code>curl -X POST https://paperpress-production.up.railway.app/v1/documents \
+  -H "Authorization: Bearer pp_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "markdown": "# Q4 Field Performance\n\nRevenue **+14% YoY**.",
+    "title": "Q4 Review",
+    "theme": "executive",
+    "brandFromUrl": "https://halliburton.com"
+  }'</code></pre>
+<pre class="code response"><code>{
+  "id": "doc_abc123",
+  "url": "https://paperpress-production.up.railway.app/pdf/doc_abc123?exp=…&amp;sig=…",
+  "pages": 1,
+  "bytes": 47311,
+  "creditsUsed": 1,
+  "creditsRemaining": 99,
+  "renderTimeMs": 275
+}</code></pre>
+  </section>
+
+  <section id="pricing" class="block">
+    <div class="block-head">
+      <h2>Pricing</h2>
+      <p>Credits only. No subscriptions, no monthly commitment. Top up when you need more.</p>
+    </div>
+    <div class="tiers tiers-2">
+      <div class="tier">
+        <h3>Free</h3>
+        <div class="price">$0</div>
+        <p class="for">to get started</p>
+        <ul>
+          <li>100 credits on signup</li>
+          <li>All 5 themes &amp; brand kits</li>
+          <li>URL auto-detect</li>
+          <li>7-day PDF retention</li>
+        </ul>
+      </div>
+      <div class="tier featured">
+        <span class="tier-pill">Pack</span>
+        <h3>Top-up</h3>
+        <div class="price">$10<span class="per"> · 1,200 credits</span></div>
+        <p class="for">one credit = one rendered page</p>
+        <ul>
+          <li>~$0.0083 per page</li>
+          <li>Credits never expire</li>
+          <li>Buy as many packs as you need</li>
+          <li>30-day PDF retention</li>
+        </ul>
+      </div>
+    </div>
+    <p class="pricing-foot">Need higher volume or auto-refill? <a href="https://github.com/rozetyp/paperpress/issues">Open an issue.</a></p>
+  </section>
+
+  <section class="final-cta">
+    <h2>Ship a PDF from your agent in five minutes.</h2>
+    <div class="cta-row center">
+      <a class="btn primary" href="/docs/#mcp-server">Install the MCP server</a>
+      <a class="btn" href="/docs/#api-reference">Read the API docs</a>
+    </div>
+    <p class="cta-note">Free during beta · 100 credits to start · no card required</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <a class="brand" href="/">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="8" y1="13" x2="14" y2="13"/>
+        <line x1="8" y1="17" x2="14" y2="17"/>
+      </svg>
+      <span>paperpress</span>
+    </a>
+    <nav class="footer-nav">
+      <a href="/about.html">About</a>
+      <a href="/docs/">Docs</a>
+      <a href="/docs/#mcp-server">Install MCP</a>
+      <a href="/docs/#api-reference">API</a>
+      <a href="https://github.com/rozetyp/paperpress/issues">Contact</a>
+    </nav>
+  </div>
+  <p class="footer-fineprint">© paperpress · A PDF API for AI agents.</p>
+</footer>
+
+<script>
+(function () {
+  var form = document.getElementById('getkey');
+  if (!form) return;
+  var msg = document.getElementById('getkey-msg');
+  var btn = form.querySelector('button');
+  var input = form.elements.email;
+
+  function show(kind, text) {
+    msg.hidden = false;
+    msg.className = 'signup-msg ' + kind;
+    msg.textContent = text;
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = (input.value || '').trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      show('err', 'Enter a valid email address.');
+      input.focus();
+      return;
+    }
+    btn.disabled = true; input.disabled = true;
+    btn.textContent = 'Sending…';
+    fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    }).then(function (r) {
+      if (r.status === 202) {
+        show('ok', 'Check your inbox - your key is on its way.');
+        btn.textContent = 'Sent ✓';
+      } else if (r.status === 429) {
+        show('err', 'Too many requests. Wait a minute, then try again.');
+        btn.disabled = false; input.disabled = false;
+        btn.textContent = 'Get a key';
+      } else {
+        show('err', 'Could not send right now. Please try again in a moment.');
+        btn.disabled = false; input.disabled = false;
+        btn.textContent = 'Get a key';
+      }
+    }).catch(function () {
+      show('err', 'Network error. Try again in a moment.');
+      btn.disabled = false; input.disabled = false;
+      btn.textContent = 'Get a key';
+    });
+  });
+})();
+
+// Try-it widget: paste URL → detect + render → show kit + card + PDF link.
+(function () {
+  var form = document.getElementById('try-form');
+  if (!form) return;
+  var msg = document.getElementById('try-msg');
+  var result = document.getElementById('try-result');
+  var btn = form.querySelector('button');
+  var input = form.elements.url;
+
+  function show(kind, text) {
+    msg.hidden = false;
+    msg.className = 'try-msg ' + kind;
+    msg.textContent = text;
+  }
+  function setText(sel, text) {
+    var el = result.querySelector('[' + sel + ']');
+    if (el) el.textContent = text;
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var url = (input.value || '').trim();
+    // Be forgiving: if they typed "stripe.com" without a scheme, prepend https://.
+    if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+    if (!url || !/^https?:\/\/[^\s/]+\.[^\s]+/.test(url)) {
+      show('err', 'Enter a URL like stripe.com or https://stripe.com');
+      input.focus();
+      return;
+    }
+    // Reflect the canonicalized URL back into the input so the user sees what got sent.
+    input.value = url;
+    btn.disabled = true; input.disabled = true;
+    btn.textContent = 'Detecting…';
+    msg.hidden = true;
+    result.hidden = true;
+
+    fetch('/v1/demo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url })
+    }).then(function (r) {
+      return r.json().then(function (data) { return { status: r.status, data: data }; });
+    }).then(function (resp) {
+      btn.disabled = false; input.disabled = false;
+      btn.textContent = 'Try another →';
+      if (resp.status === 429) {
+        show('err', 'Whoa — too many demo requests. Try again in a few minutes, or grab a key for unlimited renders.');
+        return;
+      }
+      if (resp.status === 400 || resp.status === 502) {
+        show('err', 'Could not read that URL. Try a different one (must be a public https URL).');
+        return;
+      }
+      if (resp.status !== 200) {
+        show('err', 'Demo error: ' + (resp.data.error || 'unknown'));
+        return;
+      }
+      var d = resp.data.detected || {};
+      // Color
+      var swatch = result.querySelector('[data-swatch]');
+      if (swatch) swatch.style.background = d.primaryColor || '#ddd';
+      setText('data-color', d.primaryColor || '(none detected)');
+      // Logo. Many sites only serve favicon.ico, which browsers won't render
+      // inside an <img> tag (the format is only spec'd for <link rel="icon">).
+      // If the load fails for any reason, fall back to the empty-state label.
+      var logoImg = result.querySelector('[data-logo]');
+      var logoEmpty = result.querySelector('[data-logo-empty]');
+      logoImg.onerror = function () { logoImg.hidden = true; logoEmpty.hidden = false; };
+      logoImg.onload = function () { logoImg.hidden = false; logoEmpty.hidden = true; };
+      if (d.logoUrl) {
+        logoImg.hidden = true;
+        logoEmpty.hidden = true;
+        logoImg.src = d.logoUrl;
+      } else {
+        logoImg.hidden = true;
+        logoEmpty.hidden = false;
+      }
+      // Font
+      setText('data-font', d.fontFamily || d.fontStyle || '(none detected)');
+      // Elapsed
+      setText('data-elapsed', 'Detected + rendered in ' + ((resp.data.elapsedMs || 0) / 1000).toFixed(1) + 's');
+      var pdfLink = result.querySelector('[data-pdf-link]');
+      if (resp.data.pdf && resp.data.pdf.url) {
+        pdfLink.href = resp.data.pdf.url; pdfLink.hidden = false;
+      } else {
+        pdfLink.hidden = true;
+      }
+      result.hidden = false;
+    }).catch(function () {
+      btn.disabled = false; input.disabled = false;
+      btn.textContent = 'Try it →';
+      show('err', 'Network error. Try again.');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
