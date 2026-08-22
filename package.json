@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Self-hostable API that detects a company's brand from its URL and renders markdown into a PDF in that brand, in one HTTP call. Ships with an MCP server for use from AI agents.",
+  "description": "API that detects a company's brand from its URL and renders markdown into a PDF in that brand, in one HTTP call. Portfolio project, not a maintained product.",
   "license": "MIT",
   "repository": {
     "type": "git",

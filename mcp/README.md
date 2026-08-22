@@ -1,28 +1,8 @@
 # @paperpress/mcp
 
-MCP server for [paperpress](https://github.com/rozetyp/paperpress) — turn markdown into branded PDFs from inside Claude Desktop, Cursor, or any MCP-compatible AI agent.
+MCP server for [paperpress](https://github.com/rozetyp/paperpress) — wraps `/v1/documents` as one `generate_pdf` tool.
 
-## Install
-
-Add to your MCP config (`~/.claude/mcp.json` for Claude Desktop, or your client's equivalent):
-
-```json
-{
-  "mcpServers": {
-    "paperpress": {
-      "command": "npx",
-      "args": ["-y", "@paperpress/mcp"],
-      "env": {
-        "PAPERPRESS_API_KEY": "pp_live_..."
-      }
-    }
-  }
-}
-```
-
-Get a free API key by POSTing your email to `/auth/register` on the reference deployment (see the [main README](../README.md#local-dev)), or self-host and point at your own instance.
-
-`PAPERPRESS_API_BASE` is also read from the environment if you need to point at a different host; it defaults to the hosted reference deployment, `https://paperpress-production.up.railway.app`.
+**Not published to npm** — this is reference code, part of a portfolio piece, not an installable package. There's no `npx -y @paperpress/mcp` that works. If you want to run it: clone the repo, `cd mcp && npm install && npm run build`, then point an MCP client's `command`/`args` at `node` and the built `dist/index.js` directly, with `PAPERPRESS_API_KEY` (and optionally `PAPERPRESS_API_BASE`, which defaults to the live demo at `https://paperpress-production.up.railway.app`) in `env`.
 
 ## Tool
 
@@ -48,7 +28,7 @@ The agent generates the markdown, calls `generate_pdf`, and returns the URL.
 ## Credits
 
 - 1 credit = 1 page
-- Free tier and rate limits are set by whichever instance you point at (see `PAPERPRESS_API_BASE`) — self-hosted instances configure this themselves (`FREE_TIER_CREDITS` env var).
+- No payment processing exists anywhere in this project — credits are just a counter in Postgres.
 
 ## License
 

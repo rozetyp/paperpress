@@ -1,6 +1,6 @@
 # paperpress
 
-Self-hostable API that detects a company's brand from its live URL — logo, primary color, font — and renders markdown into a PDF styled in that brand, in one HTTP call. Ships as a plain REST API and as an MCP server, so it's usable from any agent framework, not just one chat product.
+An API that detects a company's brand from its live URL — logo, primary color, font — and renders markdown into a PDF styled in that brand, in one HTTP call. Ships as a plain REST API and as an MCP server.
 
 ```
 POST /v1/documents
@@ -8,18 +8,11 @@ POST /v1/documents
 → ~1s → signed URL to a PDF in Stripe's brand
 ```
 
-## Who this is for
+## About this project
 
-- **Developers building agents or automations** (LangChain, custom agent loops, n8n/Make, or anything that can make an HTTP call) that need to hand a user a professional-looking, on-brand document — proposals, reports, one-pagers — without hand-rolling a renderer or paying for a hosted brand-data API.
-- **People running local/self-hosted MCP tooling** (Claude Code, Cursor, other MCP clients) who want something they can install, read, and self-host rather than depend on a closed SaaS.
-- **Anyone who wants a reference implementation** of "visit a live page with a real browser, extract its brand signals, apply them to a render" — the detector (`src/render/detect.ts`) is useful reading on its own.
+This was built and briefly run as a real deployed service before I looked closely at the market it would need to compete in: Claude ships native PDF/PPTX/DOCX generation now, and Brandfetch already sells a Brand Context API built specifically for grounding AI agents, with real paying customers. Both halves of what this does — detect a brand, render a document — are now commodity-adjacent or already owned by a funded competitor. I'm not pursuing this as a product.
 
-### What this is not
-
-- Not a brand-data platform with a curated database (that's [Brandfetch](https://brandfetch.com) — paid, much larger company/logo coverage, an agent-context API of its own).
-- Not a template/WYSIWYG document builder (see CraftMyPDF, PDFGenerator API if you need that).
-- Not e-signature or legal-grade document infra (see DocuSign, Anvil).
-- Not a managed service with an SLA — the hosted instance below is a reference deployment, not a commercial product. Self-hosting is the intended primary use.
+It's public as a portfolio piece / reference implementation: a working Playwright-based brand detector (CSS custom properties, CTA color sampling, scored logo-candidate extraction, WCAG contrast guard), a sync Fastify render pipeline, an SSRF-hardened URL fetcher, and an MCP server wrapping it. Read the code, fork it, run it — it's MIT licensed. It is not maintained as a product: no payment processing is wired up, the MCP package (`mcp/`) is not published to npm, and there's no support commitment behind the live demo below.
 
 ## How it works
 
@@ -31,13 +24,13 @@ A single Fastify process does three things:
 
 No queue, no worker process, no Redis. Renders are sync and typically 100–400ms once Chromium is warm; detection is cached 24h per host.
 
-## Live reference deployment
+## Live demo
 
 - API: <https://paperpress-production.up.railway.app>
 - Docs: <https://paperpress-production.up.railway.app/docs/>
-- Try the brand detector + a live demo render straight from the landing page.
+- Try the brand detector + a demo render straight from the landing page.
 
-This is a single free-tier-ish reference instance, not a product with support guarantees. If you want reliability, self-host — see below.
+Single free-tier instance, kept up as a demo. No support guarantees, may come down.
 
 ## What's here
 
@@ -50,7 +43,7 @@ This is a single free-tier-ish reference instance, not a product with support gu
 │   ├── render/                markdown → HTML → PDF (themes/, detect.ts)
 │   └── routes/                auth, documents, demo, account, pdf, brand-kits, admin
 ├── prisma/schema.prisma       5 models: User, ApiKey, Document, CreditTransaction, BrandKit
-├── mcp/                       MCP server (separate npm package @paperpress/mcp)
+├── mcp/                       MCP server (unpublished — see mcp/README.md)
 ├── landing/                   Static landing + pre-rendered /docs/*.html
 ├── docs/                      Markdown source for the docs pages
 ├── scripts/                   build-docs.ts (docs prerender), preview.ts / detect.ts (local sample generation)
@@ -116,10 +109,13 @@ Gated by `X-Admin-Token` header. When `ADMIN_TOKEN` is unset, every `/admin/*` r
 
 ## Known limitations
 
-- **No automated test suite yet.** Everything above has been verified by hand against a running instance; there's no regression net if you change this code. Contributions adding tests (especially around the SSRF guard and the render pipeline) are very welcome.
-- **No committed Prisma migrations.** The container start command runs `prisma db push --skip-generate --accept-data-loss`. Fine for a demo instance; generate real migrations (`npx prisma migrate dev --name init`) before trusting this with data you can't afford to lose.
-- **In-memory rate limiting and detect-cache.** Fine single-instance; if you scale to multiple replicas, move both to something shared (Redis, or a Postgres row with a TTL).
-- **The MCP package (`mcp/`) is not yet published to npm.** `npx @paperpress/mcp` in the MCP docs won't resolve until someone runs `npm publish ./mcp --access public`.
+Not a product, so these are disclosed rather than tracked as a backlog:
+
+- **No automated test suite.** Everything above was verified by hand against a running instance; there's no regression net.
+- **No committed Prisma migrations.** The container start command runs `prisma db push --skip-generate --accept-data-loss`.
+- **In-memory rate limiting and detect-cache.** Fine single-instance; wouldn't survive multiple replicas without moving both to something shared.
+- **No payment processing wired up.** The credit system exists in the schema and API; nothing charges a card.
+- **The MCP package (`mcp/`) is not published to npm** and isn't going to be — see [mcp/README.md](mcp/README.md).
 
 ## Local dev
 
@@ -158,11 +154,11 @@ curl -X POST http://localhost:3000/v1/documents \
 
 ## MCP
 
-See [mcp/README.md](mcp/README.md). The MCP server is a thin client over the REST API — same auth, same billing — so it works against either the hosted reference instance or your own self-hosted one.
+See [mcp/README.md](mcp/README.md). A thin MCP client over the REST API. Not published to npm — included as reference code, not as an installable tool.
 
-## Deploy it yourself (Railway example)
+## Deploy (Railway example)
 
-These are the exact steps used for the reference deployment above; adapt the service name/domain for your own.
+The exact steps used for the live demo above — kept here as documentation of the real deployment, not as an invitation to run this in production.
 
 ```bash
 # 1. Create project with a Postgres database
@@ -203,18 +199,11 @@ Notes:
 
 Product docs live in [docs/index.md](docs/index.md) and pre-render to `landing/docs/*.html` at Docker build time (`scripts/build-docs.ts`).
 
-## Roadmap
+## Status
 
-**Shipped**: markdown → PDF across 5 themes, brand-kit auto-detect from a URL (real font-family stack, not just a `serif|sans|mono` bucket), 24h detect cache, `brandFromUrl` one-call shortcut, batch detect (20 URLs in parallel), WCAG luminance guard, email-based key issuance with rotation grace, MCP server, read-only admin surface, signed share URLs, pre-rendered docs.
+**Built**: markdown → PDF across 5 themes, brand-kit auto-detect from a URL (real font-family stack, not just a `serif|sans|mono` bucket), 24h detect cache, `brandFromUrl` one-call shortcut, batch detect (20 URLs in parallel), WCAG luminance guard, email-based key issuance with rotation grace, an MCP server, a read-only admin surface, signed share URLs, pre-rendered docs.
 
-**Good first issues / contributions welcome**:
-- Automated tests (unit tests for the detector's color/font parsing, integration tests for the render pipeline, a redirect-based SSRF regression test)
-- Real Prisma migrations in place of `db push`
-- Publish `@paperpress/mcp` to npm
-- Open/view tracking on `/pdf/:id` (the route is already fully owned — just needs a `DocumentView` table and a read endpoint)
-- Per-render preview thumbnail, watermarks, cover pages
-
-**Explicitly not planned**: template variable interpolation (agents can do this client-side), a drag-drop template editor, PDF merge/split, e-signature — all better served by existing dedicated tools.
+**Not built, on purpose**: payment processing, npm publish of the MCP package, automated tests, real Prisma migrations. This isn't a live backlog — it's finished as a portfolio piece, not being developed toward a 1.0.
 
 ## License
 
