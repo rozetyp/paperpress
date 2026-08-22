@@ -1,9 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
-import fastifyStatic from '@fastify/static';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 import { env } from './env.js';
 import { prisma } from './lib/prisma.js';
 import { authRoutes } from './routes/auth.js';
@@ -42,14 +39,6 @@ await app.register(pdfRoutes);
 await app.register(brandKitRoutes);
 await app.register(demoRoutes);
 await app.register(adminRoutes);
-
-// Static landing page. Registered last so API routes win for exact matches;
-// anything else under "/" falls through to landing/.
-const __dirname = dirname(fileURLToPath(import.meta.url));
-await app.register(fastifyStatic, {
-  root: join(__dirname, '..', 'landing'),
-  prefix: '/',
-});
 
 async function shutdown(signal: string): Promise<void> {
   app.log.info({ signal }, 'shutting down');

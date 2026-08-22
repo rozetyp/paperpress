@@ -319,10 +319,9 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
 </head>
 <body>
 <header class="nav">
-  <a class="brand" href="/">paperpress</a>
+  <span class="brand">paperpress</span>
   <nav>
     <a href="/admin/">Admin</a>
-    <a href="/docs/">Docs</a>
   </nav>
 </header>
 <main class="admin">

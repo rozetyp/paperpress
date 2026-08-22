@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /v1/
-Disallow: /auth/
-Disallow: /account
-Disallow: /pdf/
-
-Sitemap: https://paperpress-production.up.railway.app/sitemap.xml
