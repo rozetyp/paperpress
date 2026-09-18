@@ -5,6 +5,5 @@ _archive
 .env
 .env.local
 storage
-mcp
 samples
 *.log

@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An API that detects a company's brand (logo, color, font) from its live URL and renders markdown into a PDF styled in that brand, in one HTTP call. A single Fastify process (`src/`) plus a separate, unpublished MCP client package (`mcp/`) that's a thin wrapper over the REST API — same auth, same request shape.
+An API that detects a company's brand (logo, color, font) from its live URL and renders markdown into a PDF styled in that brand, in one HTTP call. A single Fastify process — REST API plus a hosted MCP endpoint (`src/routes/mcp.ts`), no separate package or install step.
 
-This is a portfolio piece, not an actively maintained product: no payment processing is wired up (the credit system is a Postgres counter with no charge path), `mcp/` is not published to npm, there's no automated test suite, and there are no committed Prisma migrations (see Known gaps below). Don't add features toward a 1.0 unless explicitly asked — bug fixes and code-quality work are the useful contributions here.
+Deliberately kept as a lean skeleton: this server, callable, nothing else. No payment processing (the credit system is a Postgres counter with no charge path), no automated test suite, no committed Prisma migrations (see Known gaps below). Don't add features toward a 1.0 unless explicitly asked — bug fixes and code-quality work are the useful contributions here.
 
 ## Commands
 
@@ -24,11 +24,6 @@ Regenerating the example renders in `samples/` (useful after touching `src/rende
 ```bash
 npx tsx scripts/preview.ts              # renders samples/sample.md across all 5 themes + a few brand kits
 npx tsx scripts/detect.ts <url> [...]    # CLI brand-detection debug; add RENDER_SAMPLE=1 to also render a PDF per URL
-```
-
-MCP package (separate `package.json`, separate `node_modules`):
-```bash
-cd mcp && npm install && npm run build   # tsc -> mcp/dist/
 ```
 
 ## Architecture
