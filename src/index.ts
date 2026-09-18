@@ -10,6 +10,7 @@ import { pdfRoutes } from './routes/pdf.js';
 import { brandKitRoutes } from './routes/brand-kits.js';
 import { demoRoutes } from './routes/demo.js';
 import { adminRoutes } from './routes/admin.js';
+import { mcpRoutes } from './routes/mcp.js';
 import { shutdownRenderer } from './render/pdf.js';
 
 const app = Fastify({
@@ -39,6 +40,7 @@ await app.register(pdfRoutes);
 await app.register(brandKitRoutes);
 await app.register(demoRoutes);
 await app.register(adminRoutes);
+await app.register(mcpRoutes);
 
 async function shutdown(signal: string): Promise<void> {
   app.log.info({ signal }, 'shutting down');
