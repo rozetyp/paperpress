@@ -1,10 +1,27 @@
 # paperpress
 
-An API that detects a company's brand from its live URL - logo, primary color, font - and renders markdown into a PDF styled in that brand, in one HTTP call. Plain REST API plus a hosted MCP endpoint. No signup, no API key: every endpoint is open and rate-limited per IP.
+**Give it a company's URL and some markdown. Get back a PDF in that company's brand.**
 
-## Try it right now
+One HTTP call. No signup, no API key. REST API plus a hosted MCP server, so AI agents can use it too.
 
-Hits the live instance's demo route (rate-limited, 30/hour/IP):
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![MCP: Streamable HTTP](https://img.shields.io/badge/MCP-Streamable%20HTTP-6f42c1.svg)](#use-it-from-an-ai-agent-mcp)
+[![API key: none](https://img.shields.io/badge/API%20key-none-brightgreen.svg)](#try-it)
+
+<table>
+  <tr>
+    <td align="center"><img src="samples/detect-stripe-com.png" width="200" alt="Sample report rendered in Stripe's brand"><br><sub><code>stripe.com</code></sub></td>
+    <td align="center"><img src="samples/detect-github-com.png" width="200" alt="Sample report rendered in GitHub's brand"><br><sub><code>github.com</code></sub></td>
+    <td align="center"><img src="samples/detect-railway-com.png" width="200" alt="Sample report rendered in Railway's brand"><br><sub><code>railway.com</code></sub></td>
+    <td align="center"><img src="samples/detect-vercel-com.png" width="200" alt="Sample report rendered in Vercel's brand"><br><sub><code>vercel.com</code></sub></td>
+  </tr>
+</table>
+
+<sub>The same markdown, four times. The logo, color and font in each were detected live from the URL underneath.</sub>
+
+## Try it
+
+Paste this into a terminal. It detects Stripe's brand and renders a sample report in it:
 
 ```bash
 curl -X POST https://paperpress.up.railway.app/v1/demo \
@@ -12,9 +29,22 @@ curl -X POST https://paperpress.up.railway.app/v1/demo \
   -d '{"url":"https://stripe.com"}'
 ```
 
-Returns the brand kit detected live from `stripe.com` (primary color, logo, real font stack) plus a signed URL to a PDF rendered in it, generated at the moment you ran that command. Swap in any company's URL.
+You get back what was detected, plus a link to the PDF:
 
-With your own markdown, the same shortcut is `brandFromUrl`:
+```json
+{
+  "detected": {
+    "primaryColor": "#533afd",
+    "logoUrl": "https://images.stripeassets.com/.../favicon.png",
+    "fontFamily": "sohne-var, \"SF Pro Display\", sans-serif",
+    "fontStyle": "sans"
+  },
+  "pdf": { "url": "https://paperpress.up.railway.app/pdf/...", "bytes": 59496 },
+  "elapsedMs": 1484
+}
+```
+
+Swap in any company's URL. To render your own markdown instead of the sample, use `/v1/documents`:
 
 ```bash
 curl -X POST https://paperpress.up.railway.app/v1/documents \
@@ -22,178 +52,171 @@ curl -X POST https://paperpress.up.railway.app/v1/documents \
   -d '{"markdown":"# Q4 report\n\nRevenue up 14%.","brandFromUrl":"https://stripe.com"}'
 ```
 
-Or from any MCP client, add the server by URL - nothing else to configure:
+## Use it from an AI agent (MCP)
 
-```json
-{ "url": "https://paperpress.up.railway.app/mcp" }
+The server speaks MCP over Streamable HTTP at:
+
+```
+https://paperpress.up.railway.app/mcp
 ```
 
-## What's actually different here
+Add that URL to any MCP client. There's nothing else to configure: no key, no headers, no install. For clients that use an `mcpServers` config file:
 
-Two concrete things, out of everything else in this repo:
+```json
+{
+  "mcpServers": {
+    "paperpress": { "url": "https://paperpress.up.railway.app/mcp" }
+  }
+}
+```
 
-1. **The detector reads live browser state, not a database.** Brandfetch - the funded, customer-backed competitor doing brand data for AI agents - works off a curated, crawled database: it has to have seen a company before, and coverage/freshness is the product. This navigates the real page with Playwright and reads `getComputedStyle`, actual CSS custom properties, and rendered CTA colors at request time, on any URL, including ones nobody's indexed yet. It also returns the exact font stack (e.g. `"sohne-var, SF Pro Display"`), not a coarse `serif`/`sans`/`mono` bucket, because it's reading what the browser renders, not classifying against a lookup table.
-2. **Detect + render is one atomic call.** Everywhere else, you glue two vendors together yourself: call a brand-data API, get JSON back, then separately call an HTML/PDF-render API with that JSON - two round trips, two bills, integration code in between. `brandFromUrl` does both inside one HTTP call, synchronously, in about a second.
+It exposes one tool, `generate_pdf`, with the same inputs as `/v1/documents`. Ask your agent something like *"write a one-page board update and make it a PDF in Linear's brand"*, and it will call the tool with `brandFromUrl: "https://linear.app"` and hand you the link.
 
-Neither makes the underlying idea a good business on its own - see below - but they're the two decisions here that aren't just "another wrapper."
-
-**Known, honest gap in the same detector**: it reads the DOM at `domcontentloaded`, so it works well on server-rendered marketing pages but misses brand signals on pages that render their real UI client-side after that (`open.spotify.com`, for example - it gets the logo, misses the color). Several fixes were tried and reverted rather than shipped half-working; see commit history if you want the detail. Documented as a limitation, not silently papered over.
-
-## About this project
-
-This was built and briefly run as a real deployed service before I looked closely at the market it would need to compete in: Claude ships native PDF/PPTX/DOCX generation now, and Brandfetch already sells a Brand Context API built specifically for grounding AI agents, with real paying customers. Both halves of what this does - detect a brand, render a document - are now commodity-adjacent or already owned by a funded competitor. I'm not pursuing this as a product.
-
-It's public as a portfolio piece / reference implementation: a working Playwright-based brand detector (CSS custom properties, CTA color sampling, scored logo-candidate extraction, WCAG contrast guard), a sync Fastify render pipeline, an SSRF-hardened URL fetcher, and a hosted MCP endpoint. Read the code, fork it, run it - it's MIT licensed. It is not maintained as a product.
+It's the standard transport, so it isn't tied to one vendor or model: it should work with Claude Desktop, Claude.ai connectors, Cursor, Claude Code, or an agent running a local model. It's verified against the raw `@modelcontextprotocol/sdk` client; the server never knows which model is on the other end.
 
 ## How it works
 
-A single Fastify process does three things:
+1. **Detect** ([`src/render/detect.ts`](src/render/detect.ts)). Opens the URL in headless Chromium and reads what the browser actually rendered: `theme-color`, brand CSS custom properties, the background color of call-to-action buttons, the computed `font-family`, and header `<img>` candidates scored by position, size and format. Near-white, near-black and gray noise is filtered out, and a WCAG contrast check stops a too-light brand color from making text unreadable. Results are cached for 24 hours per site.
+2. **Render** ([`src/render/`](src/render/)). Markdown becomes HTML via `unified`/`remark`/`rehype`, styled by one of five themes plus the brand kit, then printed to PDF by Playwright. Typically 100-400 ms once Chromium is warm.
+3. **Serve.** PDFs are written to disk behind HMAC-signed links that expire after 7 days.
 
-1. **Detect** (`src/render/detect.ts`) - navigates the target URL with a pooled Playwright/Chromium instance, reads `theme-color`, brand CSS custom properties, CTA button colors, header `<img>` candidates scored by position/size/format, and computed font stacks. Filters near-white/near-black/near-gray noise, applies a WCAG luminance guard so a too-light brand color doesn't blow out text contrast.
-2. **Render** (`src/render/`) - turns markdown into HTML via `unified`/`remark`/`rehype` (with `allowDangerousHtml: false`), applies one of five themes plus the detected/supplied brand kit, and prints to PDF with Playwright.
-3. **Serve** - PDFs go to local disk (or a mounted volume) behind HMAC-signed, time-limited URLs.
+One Fastify process. No queue, no worker, no Redis, no database.
 
-No queue, no worker process, no Redis, no database. Renders are sync and typically 100–400ms once Chromium is warm; detection is cached 24h per host.
+### Why it's built this way
 
-## What's here
+- **It reads the live page, not a database.** Brand-data APIs like Brandfetch work from a crawled index, so they only know companies they've already seen. This reads the page at request time, so it works on any URL, including ones nobody has indexed. It also returns the exact font stack (`"sohne-var, SF Pro Display"`), not just `serif`/`sans`/`mono`, because it reads what the browser renders.
+- **Detect and render happen in one call.** Normally you'd call a brand API, take the JSON, then call a separate PDF API with it: two round trips, two vendors, glue code in between. `brandFromUrl` does both in a single synchronous request, in about a second.
 
+## API reference
+
+Base URL: `https://paperpress.up.railway.app`. Every endpoint is anonymous.
+
+| Method | Path | What it does |
+|---|---|---|
+| `POST` | `/v1/documents` | Markdown → PDF. Returns a signed link. |
+| `POST` | `/v1/detect` | URL → detected brand kit, as JSON. |
+| `POST` | `/v1/demo` | URL → detected brand kit plus a sample report rendered in it. |
+| `POST` | `/mcp` | MCP endpoint, one `generate_pdf` tool. |
+| `GET` | `/pdf/:id?exp=&sig=` | Download a rendered PDF (signed link). |
+| `GET` | `/health` | `{ "status": "ok" }` |
+
+### `POST /v1/documents`
+
+| Field | Type | |
+|---|---|---|
+| `markdown` | string, required | Up to 500 KB. Headings, lists, tables, code blocks, blockquotes, links. |
+| `brandFromUrl` | URL | Detect a brand from this page and apply it. |
+| `brandKit` | object | Set brand fields directly: `primaryColor`, `accentColor` (hex), `logoUrl`, `fontFamily`, `headingFontFamily`, `fontStyle` (`serif`/`sans`/`mono`), `density` (`compact`/`normal`/`spacious`). Overrides anything detected. |
+| `theme` | string | `clean` (default), `executive`, `academic`, `technical`, `marketing`. |
+| `title` | string | Goes in the PDF metadata, and in the page header when a brand is applied. |
+| `format` | string | `A4` (default), `Letter`, `Legal`. |
+| `landscape` | boolean | Default `false`. |
+| `css` | string | Raw CSS applied last, for one-off overrides. |
+
+Response:
+
+```json
+{ "id": "bc79fc99-...", "url": "https://paperpress.up.railway.app/pdf/bc79fc99-...?exp=...&sig=...", "pages": 1, "bytes": 57139, "renderTimeMs": 101 }
 ```
-.
-├── src/                       Fastify API (single process)
-│   ├── index.ts               Bootstrap, route registration
-│   ├── env.ts                 Env validation (zod)
-│   ├── lib/                   storage (signed URLs), render-limit (per-IP budget), url-fetch (SSRF guard), inline-image
-│   ├── render/                markdown → HTML → PDF (document.ts, themes/, detect.ts)
-│   └── routes/                documents, detect, demo, pdf, mcp
-├── samples/                   Example output (see Examples below) + input markdown used to generate it
-├── scripts/                   preview.ts / detect.ts - regenerate the samples/ output locally
-├── Dockerfile                 Single-image deploy (Playwright base)
-└── railway.json               Railway config (healthcheck only - start cmd is in Dockerfile)
-```
 
-## API surface (v1)
+### `POST /v1/detect`
 
-All endpoints are anonymous. Limits are per IP.
+Send `{ "url": "https://linear.app" }`. Results are cached for 24 hours per site; add `"refresh": true` to skip the cache. You get back `primaryColor`, `palette`, `logoUrl`, `favicon`, `fontFamily`, `headingFontFamily` and `fontStyle`. You can pass these straight back as a `brandKit`, adjusted if you like.
 
-| Method | Path | Limit | What it does |
-|---|---|---|---|
-| POST | `/v1/documents` | 30 renders/hour (shared with MCP) | Markdown → PDF. Accepts `theme`, `brandKit` (inline object), `brandFromUrl` (detect-and-apply shortcut), `css`, `format`, `landscape`, `title`. Returns a signed URL. 413 if rendered pages > `MAX_PAGES_PER_RENDER` (default 200). |
-| POST | `/v1/detect` | 30/hour | Pass a URL, get back `primaryColor`, `logoUrl`, `favicon`, `fontFamily`, `fontStyle`. 24h-cached. Pass `{ refresh: true }` to bypass. |
-| POST | `/v1/demo` | 30/hour | `{ url }` → detect brand (cached) + render a bundled sample report as PDF. Returns kit + signed URL. |
-| GET | `/pdf/:id?exp=&sig=` | - | Stream the PDF (signed URL, 7-day TTL) |
-| POST | `/mcp` | 30 renders/hour (shared with `/v1/documents`) | Streamable HTTP MCP endpoint - one `generate_pdf` tool, same inputs as `/v1/documents`. |
-| GET | `/health` | - | `{ status: 'ok' }` |
+### Limits
 
-Plus a global 60 requests/minute on everything.
+Per IP address:
 
-**MCP**: standard Streamable HTTP transport, not tied to any one vendor's client or model: works with Claude Desktop, Claude.ai connectors, Cursor, Claude Code, and any other MCP-compatible client, local-model-based agents included. Add it by URL, no key, no install, no npm package - see `src/routes/mcp.ts`. Verified directly against the raw `@modelcontextprotocol/sdk` client; the server has no idea what model is on the other end.
+- **30 renders an hour**, shared between `/v1/documents` and the MCP tool.
+- **30 an hour** each for `/v1/detect` and `/v1/demo`.
+- **60 requests a minute** across everything.
 
-## Security posture
+Over a limit, the API returns `429` with a `Retry-After` header, and the MCP tool returns an error saying when to retry. A single document is capped at 200 pages.
 
-- **No accounts**: there's nothing to steal - no keys, no emails, no database. The trade-off is that the Chromium pool is open to anyone, so it's guarded by per-IP limits (a shared hourly render budget for `/v1/documents` + MCP, 30/hour on detect and demo, 60/min globally) and a hard per-page timeout (below).
-- **Signed URLs**: HMAC-SHA256, `exp` + `sig` query params, 7-day default TTL.
-- **SSRF guard**: `assertPublicUrl` resolves DNS and rejects RFC1918, loopback, link-local, IPv6 ULA on the URL a caller submits. Applied to `brandKit.logoUrl`, `brandFromUrl`, `/v1/detect` and `/v1/demo`. The submitted host being public doesn't guarantee every hop is - a public host can redirect to a private address - so both the Playwright navigation path (`src/render/detect.ts`) and the image-inlining fetch (`src/lib/inline-image.ts`) re-validate the address on every redirect hop before following it and again after final navigation. This narrows the window but doesn't fully eliminate it: the initial connection to a redirect target happens before the re-check can reject it, so a determined attacker can still cause a blind outbound request (no response data is returned to them) even though no page content is ever extracted or rendered from a rejected target. Full closure would need IP-pinning at the network layer.
-- **CSS injection guard**: the `css` field rejects `<style>`, `</style>`, `<script>`, `</script>` - otherwise the raw embed inside `<style>${css}</style>` would let an attacker break out and run JS in the Chromium pool.
-- **Markdown sanitization**: `remark-rehype` runs with `allowDangerousHtml: false`, so `<script>` in markdown bodies is stripped.
-- **Hung pages**: Playwright's `page.evaluate()` has no timeout, and some sites never settle (`airbnb.com` hung 60s+). Every browser page is raced against `RENDER_TIMEOUT_MS`; on timeout its context is killed and replaced, so a hung page can't hold a pool slot.
-- **Limits**: markdown ≤ 500KB, css ≤ 50KB, body ≤ 2MB, render ≤ 30s, rendered pages ≤ `MAX_PAGES_PER_RENDER` (default 200).
+## Themes
 
-## Known limitations
+The same markdown in each built-in theme, with no brand applied:
 
-Not a product, so these are disclosed rather than tracked as a backlog:
+<table>
+  <tr>
+    <td align="center"><img src="samples/preview-clean.png" width="150" alt="clean theme"><br><sub><a href="samples/preview-clean.pdf"><code>clean</code></a></sub></td>
+    <td align="center"><img src="samples/preview-executive.png" width="150" alt="executive theme"><br><sub><a href="samples/preview-executive.pdf"><code>executive</code></a></sub></td>
+    <td align="center"><img src="samples/preview-academic.png" width="150" alt="academic theme"><br><sub><a href="samples/preview-academic.pdf"><code>academic</code></a></sub></td>
+    <td align="center"><img src="samples/preview-technical.png" width="150" alt="technical theme"><br><sub><a href="samples/preview-technical.pdf"><code>technical</code></a></sub></td>
+    <td align="center"><img src="samples/preview-marketing.png" width="150" alt="marketing theme"><br><sub><a href="samples/preview-marketing.pdf"><code>marketing</code></a></sub></td>
+  </tr>
+</table>
 
-- **No automated test suite.** Everything above was verified by hand against a running instance; there's no regression net.
-- **In-memory rate limiting and detect-cache.** Fine single-instance; reset on restart and wouldn't hold across multiple replicas without moving both to something shared.
-- **PDFs are never deleted.** Signed URLs expire after 7 days, but the files stay on the volume.
+Every sample, including PDFs with inline brand kits, is in [`samples/`](samples/). Regenerate them with `npx tsx scripts/preview.ts`, or try detection on any URL with `npx tsx scripts/detect.ts <url>`.
 
-## Local dev
+## Run it yourself
+
+Needs Node 20+.
 
 ```bash
-cp .env.example .env
-# (set SIGNING_SECRET to `openssl rand -base64 32`)
-npm install
-npm run dev
+cp .env.example .env    # set SIGNING_SECRET, e.g. `openssl rand -base64 32`
+npm install             # also downloads Chromium for Playwright
+npm run dev             # http://localhost:3000
 ```
-
-Smoke test:
 
 ```bash
 curl -X POST http://localhost:3000/v1/documents \
   -H "Content-Type: application/json" \
-  -d '{"markdown":"# Hello\n\nWorld.","title":"Test"}'
+  -d '{"markdown":"# Hello\n\nWorld."}'
 ```
 
-## Deploy (Railway example)
+| Variable | Default | |
+|---|---|---|
+| `SIGNING_SECRET` | *required* | Signs PDF download links. At least 16 characters. |
+| `PUBLIC_BASE_URL` | `http://localhost:3000` | Used to build PDF links. |
+| `STORAGE_DIR` | `./storage` | Where PDFs are written. Mount a volume here in production. |
+| `PORT` | `3000` | |
+| `PLAYWRIGHT_MAX_CONTEXTS` | `2` | Browser contexts in the pool, i.e. concurrent renders. |
+| `RENDER_TIMEOUT_MS` | `30000` | Hard limit for any single page load or render. |
+| `RENDERS_PER_HOUR` | `30` | Per-IP render budget. |
+| `MAX_PAGES_PER_RENDER` | `200` | Larger documents are rejected with `413`. |
 
-The exact steps used for the real deployment this was run under - kept here as documentation, not as an invitation to run this in production.
+### Deploy
+
+The [`Dockerfile`](Dockerfile) builds a single image on Microsoft's Playwright base, and [`railway.json`](railway.json) adds a health check. On Railway:
 
 ```bash
-# 1. Create the project
 railway init --name paperpress
-
-# 2. Create the app service
 railway add --service paperpress \
   --variables "SIGNING_SECRET=$(openssl rand -base64 32)" \
   --variables "PUBLIC_BASE_URL=https://your-app.up.railway.app" \
   --variables "STORAGE_DIR=/data/storage" \
-  --variables "NODE_ENV=production" \
-  --variables "PLAYWRIGHT_MAX_CONTEXTS=2" \
-  --variables "RENDER_TIMEOUT_MS=30000" \
-  --variables "RENDERS_PER_HOUR=30" \
-  --variables "MAX_PAGES_PER_RENDER=200"
-
-# 3. Attach a volume so PDFs survive container restarts
+  --variables "NODE_ENV=production"
 railway service paperpress
-railway volume add --mount-path /data/storage
-
-# 4. Domain (auto-detects the container port)
+railway volume add --mount-path /data/storage   # so PDFs survive restarts
 railway domain --port 3000
-
-# 5. Ship
 railway up --detach -c
 ```
 
-Notes:
-- The Dockerfile uses `mcr.microsoft.com/playwright:vX.Y-jammy` as the base. Keep that version in lockstep with the `playwright` npm package - a mismatch means the browser binary won't exist and renders fail.
-- The start command lives in the `Dockerfile` `CMD`, not `railway.json`.
+Keep the Playwright version in the `Dockerfile` base image in step with the `playwright` npm package. If they drift apart, the browser binary won't be found and every render fails.
 
-## Examples
+Rate limits key on Railway's `X-Real-IP` header ([`src/lib/client-ip.ts`](src/lib/client-ip.ts)). Behind a different proxy, check that it sets that header and doesn't pass a client-supplied one through.
 
-All of these are checked into [samples/](samples/) - generated by `scripts/preview.ts` and `scripts/detect.ts`, regenerate them yourself with `npx tsx scripts/preview.ts` / `npx tsx scripts/detect.ts <url>`.
+## Security
 
-**Same markdown, five themes** (`clean` shown below - [full PDF](samples/preview-clean.pdf)):
+- **SSRF.** Every caller-supplied URL (`brandFromUrl`, `logoUrl`, `/v1/detect`, `/v1/demo`) is resolved, and private, loopback and link-local addresses are rejected. Because a public host can redirect to a private one, the address is checked again on every redirect hop and after the page finishes loading. One gap remains: the first connection to a redirect target happens before that check can reject it, so a blind outbound request is possible, though nothing from a rejected target is ever read or returned. Closing that fully would need IP pinning at the network layer.
+- **Script injection.** Markdown is rendered with raw HTML disabled. The `css` field rejects anything that could close the `<style>` block and inject a script into the browser.
+- **Hung pages.** Some sites never finish loading (`airbnb.com` hung for over 60 seconds in testing), and Playwright's `page.evaluate()` has no timeout of its own. Every browser page is therefore raced against `RENDER_TIMEOUT_MS`, and on timeout its browser context is killed and replaced, so one bad site can't tie up the pool.
+- **No accounts, no data.** There are no keys, emails or user records to leak. The trade-off is an open browser pool, which is why the per-IP limits exist.
 
-![clean theme example](samples/preview-clean.png)
+## Known limitations
 
-| Theme | PDF |
-|---|---|
-| `academic` | [preview-academic.pdf](samples/preview-academic.pdf) |
-| `executive` | [preview-executive.pdf](samples/preview-executive.pdf) |
-| `marketing` | [preview-marketing.pdf](samples/preview-marketing.pdf) |
-| `technical` | [preview-technical.pdf](samples/preview-technical.pdf) |
+- **Pages that build their UI in JavaScript.** Detection reads the page as soon as the HTML has loaded, before client-side code runs. Server-rendered marketing sites work well. A single-page app like `open.spotify.com` gives you the logo but not the brand color, because its colored buttons don't exist yet at that point. Waiting longer fixed it but made every request 3-10x slower, so it was reverted. The commit history has the details.
+- **No automated tests.** Everything was verified by hand against a running instance.
+- **Single instance.** Rate limits and the detection cache live in memory, so they reset on restart and wouldn't be shared across replicas.
+- **PDFs aren't cleaned up.** Links expire after 7 days, but the files stay on disk.
 
-**Brand auto-detected from a live URL** (`brandFromUrl: "stripe.com"` - [full PDF](samples/detect-stripe-com.pdf)):
+## About this project
 
-![stripe brand-detected example](samples/detect-stripe-com.png)
+paperpress was built and briefly run as a real service, with a plan to charge for it. Before investing further I looked hard at the market: Claude now generates PDFs natively, and Brandfetch already sells a brand-data API built for AI agents, with real customers. So I'm not pursuing it as a business.
 
-| Source URL | Detected + rendered |
-|---|---|
-| github.com | [detect-github-com.pdf](samples/detect-github-com.pdf) |
-| railway.com | [detect-railway-com.pdf](samples/detect-railway-com.pdf) |
-| vercel.com | [detect-vercel-com.pdf](samples/detect-vercel-com.pdf) |
-
-**Inline brand kits** (no URL, fields passed directly in the request) - [forest](samples/preview-kit-forest.pdf), [mono-coral](samples/preview-kit-mono-coral.pdf), [stripe-colors](samples/preview-kit-stripe.pdf).
-
-**Input markdown** used above: [sample.md](samples/sample.md), [demo-q4-review.md](samples/demo-q4-review.md) (the one used by `/v1/demo`).
-
-## Status
-
-**Built**: markdown → PDF across 5 themes, brand-kit auto-detect from a URL (real font-family stack, not just a `serif|sans|mono` bucket), 24h detect cache, `brandFromUrl` one-call shortcut, WCAG luminance guard, a hosted Streamable HTTP MCP endpoint, signed share URLs, per-IP render budget, hard per-page timeout.
-
-**Removed, on purpose** (v0.2.0): accounts, API keys, credits, email key delivery, saved brand kits, batch detect, the admin dashboard, and Postgres. Nobody could get a key in practice (email delivery was never configured on the live deploy), so they were cost and friction with no upside.
-
-**Not built, on purpose**: payment processing, automated tests. This isn't a live backlog - it's finished as a portfolio piece, not being developed toward a 1.0.
+It's public as a working reference: a Playwright brand detector, a synchronous render pipeline, an SSRF-hardened URL fetcher and a hosted MCP server, small enough to read in an afternoon. The hosted instance stays up for anyone to try. It isn't maintained as a product.
 
 ## License
 
-MIT - see [LICENSE](LICENSE).
+[MIT](LICENSE)

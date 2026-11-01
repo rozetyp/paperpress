@@ -30,6 +30,16 @@ await app.register(rateLimit, {
 
 app.get('/health', async () => ({ status: 'ok' }));
 
+// The bare domain is the repo's homepage link, so say what this is and where
+// to start instead of 404ing.
+app.get('/', async () => ({
+  name: 'paperpress',
+  description: "Markdown to PDF in any company's brand, detected live from its URL. No API key.",
+  docs: 'https://github.com/rozetyp/paperpress',
+  mcp: `${env.PUBLIC_BASE_URL}/mcp`,
+  try: `curl -X POST ${env.PUBLIC_BASE_URL}/v1/demo -H 'Content-Type: application/json' -d '{"url":"https://stripe.com"}'`,
+}));
+
 await app.register(documentRoutes);
 await app.register(pdfRoutes);
 await app.register(detectRoutes);

@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "API that detects a company's brand from its URL and renders markdown into a PDF in that brand, in one HTTP call. Portfolio project, not a maintained product.",
+  "description": "Markdown to PDF in any company's brand, detected live from its URL. One HTTP call, no API key. REST API + hosted MCP server.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -13,7 +13,9 @@
     "pdf",
     "pdf-generation",
     "markdown-to-pdf",
+    "html-to-pdf",
     "mcp",
+    "mcp-server",
     "model-context-protocol",
     "ai-agents",
     "branding",
@@ -51,5 +53,6 @@
     "@types/node": "^20.14.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
-  }
+  },
+  "homepage": "https://github.com/rozetyp/paperpress#readme"
 }
