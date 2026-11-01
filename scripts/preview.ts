@@ -5,7 +5,6 @@
 //
 // Run with: ./node_modules/.bin/tsx scripts/preview.ts
 
-process.env.DATABASE_URL ??= 'postgresql://placeholder@localhost:5432/placeholder';
 process.env.SIGNING_SECRET ??= 'preview-only-secret-not-used-anywhere-real-1234567890';
 process.env.STORAGE_DIR ??= './samples';
 process.env.PUBLIC_BASE_URL ??= 'http://localhost:3000';

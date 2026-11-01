@@ -4,7 +4,6 @@
 // Prints the detected fields for each URL. Optionally renders a sample PDF for
 // each URL using the detected kit + the "clean" theme (set RENDER_SAMPLE=1).
 
-process.env.DATABASE_URL ??= 'postgresql://placeholder@localhost:5432/placeholder';
 process.env.SIGNING_SECRET ??= 'preview-only-secret-not-used-anywhere-real-1234567890';
 process.env.STORAGE_DIR ??= './samples';
 process.env.PUBLIC_BASE_URL ??= 'http://localhost:3000';

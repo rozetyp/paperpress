@@ -1,6 +1,5 @@
 import type { FastifyInstance } from 'fastify';
 import { readPdf, verifySignature } from '../lib/storage.js';
-import { prisma } from '../lib/prisma.js';
 
 export async function pdfRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { id: string }; Querystring: { exp?: string; sig?: string } }>(
@@ -10,13 +9,10 @@ export async function pdfRoutes(app: FastifyInstance): Promise<void> {
       const exp = Number(req.query.exp);
       const sig = req.query.sig ?? '';
 
+      // The signature covers the id, so only ids this server minted get past
+      // here — which is also what keeps `id` safe to use as a filename.
       if (!verifySignature(id, exp, sig)) {
         return reply.code(403).send({ error: 'invalid_signature' });
-      }
-
-      const doc = await prisma.document.findUnique({ where: { id } });
-      if (!doc || doc.status !== 'done') {
-        return reply.code(404).send({ error: 'not_found' });
       }
 
       try {
@@ -25,7 +21,7 @@ export async function pdfRoutes(app: FastifyInstance): Promise<void> {
         reply.header('Content-Disposition', `inline; filename="${id}.pdf"`);
         return reply.send(buf);
       } catch {
-        return reply.code(404).send({ error: 'pdf_missing' });
+        return reply.code(404).send({ error: 'not_found' });
       }
     }
   );

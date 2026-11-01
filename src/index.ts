@@ -2,14 +2,10 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import { env } from './env.js';
-import { prisma } from './lib/prisma.js';
-import { authRoutes } from './routes/auth.js';
 import { documentRoutes } from './routes/documents.js';
-import { accountRoutes } from './routes/account.js';
 import { pdfRoutes } from './routes/pdf.js';
-import { brandKitRoutes } from './routes/brand-kits.js';
+import { detectRoutes } from './routes/detect.js';
 import { demoRoutes } from './routes/demo.js';
-import { adminRoutes } from './routes/admin.js';
 import { mcpRoutes } from './routes/mcp.js';
 import { shutdownRenderer } from './render/pdf.js';
 
@@ -18,35 +14,32 @@ const app = Fastify({
     level: env.NODE_ENV === 'production' ? 'info' : 'debug',
   },
   bodyLimit: 2 * 1024 * 1024, // 2 MB
+  // Behind Railway's edge proxy: without this, req.ip is the proxy's address
+  // and every per-IP limit becomes one bucket shared by all callers. Trusting
+  // exactly one hop takes the address the proxy appended to X-Forwarded-For,
+  // not a client-supplied one.
+  trustProxy: 1,
 });
 
 await app.register(cors, { origin: true });
 await app.register(rateLimit, {
   max: 60,
   timeWindow: '1 minute',
-  keyGenerator: (req) => {
-    const header = req.headers.authorization;
-    if (header?.startsWith('Bearer ')) return header.slice(7).trim();
-    return req.ip;
-  },
+  keyGenerator: (req) => req.ip,
 });
 
 app.get('/health', async () => ({ status: 'ok' }));
 
-await app.register(authRoutes);
 await app.register(documentRoutes);
-await app.register(accountRoutes);
 await app.register(pdfRoutes);
-await app.register(brandKitRoutes);
+await app.register(detectRoutes);
 await app.register(demoRoutes);
-await app.register(adminRoutes);
 await app.register(mcpRoutes);
 
 async function shutdown(signal: string): Promise<void> {
   app.log.info({ signal }, 'shutting down');
   await app.close();
   await shutdownRenderer();
-  await prisma.$disconnect();
   process.exit(0);
 }
 

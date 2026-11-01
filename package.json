@@ -1,6 +1,6 @@
 {
   "name": "paperpress",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "API that detects a company's brand from its URL and renders markdown into a PDF in that brand, in one HTTP call. Portfolio project, not a maintained product.",
@@ -28,16 +28,12 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
-    "postinstall": "prisma generate || true && playwright install chromium || true"
+    "postinstall": "playwright install chromium || true"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
     "@fastify/rate-limit": "^9.1.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "@prisma/client": "^5.20.0",
     "color-namer": "^1.4.0",
     "fastify": "^4.28.1",
     "playwright": "^1.47.0",
@@ -53,7 +49,6 @@
   "devDependencies": {
     "@types/color-namer": "^1.3.3",
     "@types/node": "^20.14.0",
-    "prisma": "^5.20.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
   }

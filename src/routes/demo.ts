@@ -1,14 +1,14 @@
-// Anonymous public demo endpoint. Powers the "paste a URL, see your brand"
-// widget on the landing page.
+// Public demo endpoint: paste a URL, get a sample report rendered in that
+// brand. Same as brandFromUrl on /v1/documents, but with bundled markdown.
 //
-// Tight per-IP rate limit (overrides the global limit) so the widget can't
-// be abused as a free brand-scraping API or a Chromium DoS amplifier. The
-// detect side reuses the same 24h cache as the authenticated endpoint, so
-// popular URLs only pay the navigation cost once per day across all callers.
+// Tight per-IP rate limit (overrides the global limit) so it can't be abused
+// as a free brand-scraping API or a Chromium DoS amplifier. The detect side
+// reuses the same 24h cache as /v1/detect, so popular URLs only pay the
+// navigation cost once per day across all callers.
 
+import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
 import { detectBrandKitCached } from '../render/detect.js';
 import { markdownToHtml } from '../render/markdown.js';
 import { htmlToPdf } from '../render/pdf.js';
@@ -22,7 +22,6 @@ import {
 } from '../render/themes/header-footer.js';
 import type { BrandKit } from '../render/themes/index.js';
 
-const DEMO_USER_EMAIL = 'demo@paperpress.internal';
 const DEMO_TITLE = 'Q4 Field Performance';
 
 // Inlined so the demo doesn't depend on samples/ being copied into the
@@ -53,18 +52,6 @@ Field operations delivered **+14% YoY** revenue growth in Q4 2025, with notable 
 > *This is a paperpress demo. The markdown above was rendered into a branded PDF using brand colors, logo, and typeface detected automatically from the URL you provided.*
 `;
 
-let cachedDemoUserId: string | null = null;
-async function getDemoUserId(): Promise<string> {
-  if (cachedDemoUserId) return cachedDemoUserId;
-  const user = await prisma.user.upsert({
-    where: { email: DEMO_USER_EMAIL },
-    update: {},
-    create: { email: DEMO_USER_EMAIL, credits: 0 },
-  });
-  cachedDemoUserId = user.id;
-  return user.id;
-}
-
 const Body = z.object({ url: z.string().min(1).max(2048) });
 
 export async function demoRoutes(app: FastifyInstance): Promise<void> {
@@ -72,9 +59,7 @@ export async function demoRoutes(app: FastifyInstance): Promise<void> {
   //   body: { url }
   //   response: { detected, pdf: { url, bytes }, elapsedMs }
   //
-  // Detection uses the same 24h cache as the authenticated path. Rendering
-  // skips chargeCredits — demo doesn't bill — and attributes the Document
-  // rows to a system "demo" user so admin views still see the traffic.
+  // Detection uses the same 24h cache as /v1/detect and brandFromUrl.
   app.post(
     '/v1/demo',
     {
@@ -139,7 +124,6 @@ export async function demoRoutes(app: FastifyInstance): Promise<void> {
         }
       }
 
-      const userId = await getDemoUserId();
       const markdown = DEMO_MARKDOWN;
 
       // 2. Render the PDF.
@@ -159,11 +143,9 @@ export async function demoRoutes(app: FastifyInstance): Promise<void> {
           footerHtml,
           margin: HEADER_FOOTER_MARGIN,
         });
-        const doc = await prisma.document.create({
-          data: { userId, status: 'done', title: DEMO_TITLE, pages: 1, bytes: buffer.length },
-        });
-        await savePdf(doc.id, buffer);
-        pdf = { id: doc.id, url: signedUrl(doc.id), bytes: buffer.length };
+        const id = randomUUID();
+        await savePdf(id, buffer);
+        pdf = { id, url: signedUrl(id), bytes: buffer.length };
       } catch (err) {
         pdfError = err instanceof Error ? err.message : String(err);
       }

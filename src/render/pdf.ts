@@ -47,17 +47,46 @@ async function release(entry: PoolEntry): Promise<void> {
   entry.inUse = false;
 }
 
-// Generic page borrow from the pool. Used by both PDF rendering and brand-kit
-// detection (which navigates to a public URL to read meta tags / computed styles).
+// Drop a context from the pool without waiting on it. Used when a page has
+// hung: closing the context kills its renderer, which also rejects whatever
+// call (e.g. page.evaluate) was stuck inside it.
+function discard(entry: PoolEntry): void {
+  const idx = pool.indexOf(entry);
+  if (idx >= 0) pool.splice(idx, 1);
+  void entry.context.close().catch(() => {});
+}
+
+// Generic page borrow from the pool. Used by brand-kit detection (which
+// navigates to a public URL to read meta tags / computed styles).
+//
+// The whole of `fn` is bounded by RENDER_TIMEOUT_MS, not just the Playwright
+// calls that accept a timeout: page.evaluate() has none, and a page that
+// never settles (seen on airbnb.com) would otherwise hold this pool slot
+// forever. On timeout the context is thrown away rather than reused.
 export async function withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
   const entry = await acquire();
   const page = await entry.context.newPage();
+  let timer: NodeJS.Timeout | undefined;
+  let timedOut = false;
   try {
     page.setDefaultTimeout(env.RENDER_TIMEOUT_MS);
-    return await fn(page);
+    return await Promise.race([
+      fn(page),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          timedOut = true;
+          reject(new Error(`page_timeout: exceeded ${env.RENDER_TIMEOUT_MS}ms`));
+        }, env.RENDER_TIMEOUT_MS);
+      }),
+    ]);
   } finally {
-    await page.close().catch(() => {});
-    await release(entry);
+    clearTimeout(timer);
+    if (timedOut) {
+      discard(entry);
+    } else {
+      await page.close().catch(() => {});
+      await release(entry);
+    }
   }
 }
 

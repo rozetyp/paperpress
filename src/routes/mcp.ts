@@ -2,13 +2,14 @@ import type { FastifyInstance } from 'fastify';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
-import { env } from '../env.js';
+import { RenderInput, RenderError, renderDocument } from '../render/document.js';
+import { takeRenderToken } from '../lib/render-limit.js';
 
 // Streamable HTTP MCP endpoint — the modern (non-deprecated) MCP transport,
 // hosted directly by this same process. Lets any MCP client add this server
-// by URL alone: no npm install, no npx, no local build. One tool,
-// `generate_pdf`, mirroring the stdio MCP package in mcp/ but reached over
-// HTTP instead of a locally-spawned process.
+// by URL alone: no npm install, no npx, no local build, no API key. One tool,
+// `generate_pdf`, sharing renderDocument() and the per-IP render budget with
+// POST /v1/documents.
 //
 // Stateless: a fresh McpServer + transport per request (sessionIdGenerator:
 // undefined). This is a single stateless tool call, not a long-lived
@@ -30,19 +31,16 @@ const inputShape = {
         '• "marketing": pitch decks, client deliverables — big sans, vivid accent.'
     ),
   brandKit: z
-    .union([
-      z.string(),
-      z.object({
-        logoUrl: z.string().optional(),
-        primaryColor: z.string().optional(),
-        accentColor: z.string().optional(),
-        fontStyle: z.enum(['serif', 'sans', 'mono']).optional(),
-        density: z.enum(['compact', 'normal', 'spacious']).optional(),
-      }),
-    ])
+    .object({
+      logoUrl: z.string().optional(),
+      primaryColor: z.string().optional(),
+      accentColor: z.string().optional(),
+      fontStyle: z.enum(['serif', 'sans', 'mono']).optional(),
+      density: z.enum(['compact', 'normal', 'spacious']).optional(),
+    })
     .optional()
     .describe(
-      'Apply a brand kit. Pass a string to reference a saved kit by ID or name (e.g. "default"), or an inline object with any of: primaryColor (hex), accentColor (hex), fontStyle, density, logoUrl.'
+      'Apply a brand kit inline, with any of: primaryColor (hex), accentColor (hex), fontStyle, density, logoUrl.'
     ),
   css: z
     .string()
@@ -58,8 +56,12 @@ const inputShape = {
     ),
 };
 
-function buildServer(authHeader: string | undefined): McpServer {
-  const server = new McpServer({ name: 'paperpress', version: '0.1.0' });
+function errorResult(text: string) {
+  return { isError: true, content: [{ type: 'text' as const, text }] };
+}
+
+function buildServer(ip: string): McpServer {
+  const server = new McpServer({ name: 'paperpress', version: '0.2.0' });
 
   server.registerTool(
     'generate_pdf',
@@ -72,69 +74,34 @@ function buildServer(authHeader: string | undefined): McpServer {
       inputSchema: inputShape,
     },
     async (args) => {
-      if (!authHeader) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text',
-              text:
-                'No Authorization header on this MCP request. Add an API key: ' +
-                'configure your client to send "Authorization: Bearer pp_live_..." ' +
-                `(register at ${env.PUBLIC_BASE_URL}).`,
-            },
-          ],
-        };
+      // The MCP schema above is deliberately loose (it's what the model sees);
+      // RenderInput is the real validation, same as POST /v1/documents.
+      const parsed = RenderInput.safeParse(args);
+      if (!parsed.success) {
+        return errorResult(`Invalid input: ${JSON.stringify(parsed.error.flatten())}`);
+      }
+
+      const token = takeRenderToken(ip);
+      if (!token.ok) {
+        return errorResult(`Rate limited: try again in ${token.retryAfterSec}s.`);
       }
 
       try {
-        const res = await fetch(`http://127.0.0.1:${env.PORT}/v1/documents`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: authHeader,
-          },
-          body: JSON.stringify(args),
-        });
-
-        if (!res.ok) {
-          const text = await res.text();
-          return {
-            isError: true,
-            content: [{ type: 'text', text: `paperpress error ${res.status}: ${text}` }],
-          };
-        }
-
-        const data = (await res.json()) as {
-          id: string;
-          url: string;
-          pages: number;
-          creditsUsed: number;
-          creditsRemaining: number;
-        };
-
-        const pluralPages = data.pages === 1 ? '' : 's';
-        const pluralCredits = data.creditsUsed === 1 ? '' : 's';
-
+        const doc = await renderDocument(parsed.data);
+        const plural = doc.pages === 1 ? '' : 's';
         return {
           content: [
             {
               type: 'text',
-              text:
-                `✓ PDF generated (${data.pages} page${pluralPages}, ` +
-                `${data.creditsUsed} credit${pluralCredits} used, ` +
-                `${data.creditsRemaining} remaining).\n\n` +
-                `URL: ${data.url}\n` +
-                `Document ID: ${data.id}`,
+              text: `✓ PDF generated (${doc.pages} page${plural}).\n\nURL: ${doc.url}\nDocument ID: ${doc.id}`,
             },
           ],
         };
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        return {
-          isError: true,
-          content: [{ type: 'text', text: `Network error contacting paperpress: ${msg}` }],
-        };
+        if (err instanceof RenderError) {
+          return errorResult(`paperpress error ${err.status}: ${JSON.stringify(err.body)}`);
+        }
+        return errorResult(`Render failed: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
   );
@@ -144,7 +111,7 @@ function buildServer(authHeader: string | undefined): McpServer {
 
 export async function mcpRoutes(app: FastifyInstance): Promise<void> {
   app.post('/mcp', async (req, reply) => {
-    const server = buildServer(req.headers.authorization);
+    const server = buildServer(req.ip);
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
 
     reply.raw.on('close', () => {
