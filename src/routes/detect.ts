@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { detectBrandKitCached, UrlValidationError } from '../render/detect.js';
+import { clientIp } from '../lib/client-ip.js';
 
 const Body = z.object({ url: z.string().min(1).max(2048), refresh: z.boolean().optional() });
 
@@ -18,7 +19,7 @@ export async function detectRoutes(app: FastifyInstance): Promise<void> {
         rateLimit: {
           max: 30,
           timeWindow: '1 hour',
-          keyGenerator: (req) => req.ip,
+          keyGenerator: clientIp,
         },
       },
     },

@@ -4,6 +4,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { z } from 'zod';
 import { RenderInput, RenderError, renderDocument } from '../render/document.js';
 import { takeRenderToken } from '../lib/render-limit.js';
+import { clientIp } from '../lib/client-ip.js';
 
 // Streamable HTTP MCP endpoint — the modern (non-deprecated) MCP transport,
 // hosted directly by this same process. Lets any MCP client add this server
@@ -111,7 +112,7 @@ function buildServer(ip: string): McpServer {
 
 export async function mcpRoutes(app: FastifyInstance): Promise<void> {
   app.post('/mcp', async (req, reply) => {
-    const server = buildServer(req.ip);
+    const server = buildServer(clientIp(req));
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
 
     reply.raw.on('close', () => {

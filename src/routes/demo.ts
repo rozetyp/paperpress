@@ -15,6 +15,7 @@ import { htmlToPdf } from '../render/pdf.js';
 import { savePdf, signedUrl } from '../lib/storage.js';
 import { inlineImage } from '../lib/inline-image.js';
 import { assertPublicUrl, UrlValidationError } from '../lib/url-fetch.js';
+import { clientIp } from '../lib/client-ip.js';
 import {
   buildHeaderHtml,
   buildFooterHtml,
@@ -69,7 +70,7 @@ export async function demoRoutes(app: FastifyInstance): Promise<void> {
         rateLimit: {
           max: 30,
           timeWindow: '1 hour',
-          keyGenerator: (req) => req.ip,
+          keyGenerator: clientIp,
         },
       },
     },

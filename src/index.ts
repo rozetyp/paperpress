@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import { env } from './env.js';
+import { clientIp } from './lib/client-ip.js';
 import { documentRoutes } from './routes/documents.js';
 import { pdfRoutes } from './routes/pdf.js';
 import { detectRoutes } from './routes/detect.js';
@@ -12,20 +13,19 @@ import { shutdownRenderer } from './render/pdf.js';
 const app = Fastify({
   logger: {
     level: env.NODE_ENV === 'production' ? 'info' : 'debug',
+    serializers: {
+      // Log the address the rate limits actually key on, not just the socket.
+      req: (req) => ({ method: req.method, url: req.url, clientIp: clientIp(req) }),
+    },
   },
   bodyLimit: 2 * 1024 * 1024, // 2 MB
-  // Behind Railway's edge proxy: without this, req.ip is the proxy's address
-  // and every per-IP limit becomes one bucket shared by all callers. Trusting
-  // exactly one hop takes the address the proxy appended to X-Forwarded-For,
-  // not a client-supplied one.
-  trustProxy: 1,
 });
 
 await app.register(cors, { origin: true });
 await app.register(rateLimit, {
   max: 60,
   timeWindow: '1 minute',
-  keyGenerator: (req) => req.ip,
+  keyGenerator: clientIp,
 });
 
 app.get('/health', async () => ({ status: 'ok' }));
